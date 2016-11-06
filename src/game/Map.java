@@ -1,102 +1,96 @@
 package game;
-import java.util.ArrayList;
-import java.util.Random;
-
 
 public class Map
 {
-	//Settings
-	final int width;
-	final int height;
-	final int percentageFilled = 45;
-	final int smoothFactor;
-	final int borderWidth;
-	//
-	static String charWater = " ";
-	static String charLand = "-";
-	//
-	static Random rand = new Random();
-	static ArrayList<ArrayList<String>> arr = new ArrayList<ArrayList<String>>(height);
-	//static int[][] = new int[width][height];
-	//
-public Map(int width)
+	final int width, height;
 	
+	final Tile[][] grid;
 
-	public static void setGrid(){
-		for(int row = 0; row < height; row++){
-			arr.add(row, new ArrayList<String>());
+	public Map(int height, int width)
+	{
+		this.height = height;
+		this.width = width;
+		grid = new Tile[height][width];
+		
+		//the default map is filled with water.
+		for(int row = 0; row < height; row++)
+		{
 			for(int col = 0; col < width; col++)
 			{
-				if(col <= (borderWidth - 1) || row <= (borderWidth - 1) || col >= (width - borderWidth) || row >= (height - borderWidth))
-					arr.get(row).add(col, charWater);
-				else
-					arr.get(row).add(col, ( Integer.toString( getRandPercentage() ).equals("0") )?charWater:charLand );
-
+				grid[row][col] = Tile.WATER;
 			}
 		}
 	}
 
-	public static void printGrid(){
+	public void setProceduralMap(int borderWidth, int percentageFilled)
+	{
+		for(int row = borderWidth; row < height - borderWidth; row++)
+		{
+			for(int col = borderWidth; col < width - borderWidth; col++)
+			{
+				grid[row][col] = (getRandThreshold(percentageFilled) == 0) ? Tile.WATER : Tile.GRASS;
+			}
+		}
+	}
+
+	public void printGrid()
+	{
 		Game.wipeConsole();
 		for(int row = 0; row < height; row++)
 		{
 			for(int col = 0; col < width; col++)
 			{
-				System.out.print(arr.get(row).get(col));
-
+				System.out.print(grid[row][col] + " ");
 			}
 			System.out.print("\n");
 		}
-
 	}
 
-	public static int getRandPercentage(){
-		int rand100 = rand.nextInt(100) + 1;
+	public int getRandThreshold(int percentageFilled)
+	{
+		int rand100 = Game.rand.nextInt(100) + 1;
 		if (rand100 <= percentageFilled)
 			return 1;
 		else
 			return 0;
 	}
 
-	public static int getSurroundingLand(int y, int x){
+	public int getSurroundingLand(int y, int x)
+	{
 		int counterLand = 0;
-
 		for(int row = y-1; row <= y+1; row++)
 		{
 			for(int col = x-1; col <= x+1; col++)
 			{
-				if (row >= 0 && col >= 0 && row < height && col < width){
-					if(!(row == y && col == x)){
-						if(arr.get(row).get(col).equals(charLand))
+				if (row >= 0 && col >= 0 && row < height && col < width)
+				{
+					if(!(row == y && col == x))
+					{
+						if(grid[row][col].equals(Tile.GRASS))
 							counterLand++;
 					}
-				}
-				else{
+				} else {
 					counterLand--;
 				}
 			}
 		}
 		return counterLand;
-
 	}
 
-	public static void smoothenGrid(){
-
-		for(int row = 0; row < height; row++){
-			for(int col = 0; col < width; col++){
+	public void smoothenGrid(int smoothFactor)
+	{
+		for(int row = 0; row < height; row++)
+		{
+			for(int col = 0; col < width; col++)
+			{
 				int surroundings = getSurroundingLand(row, col);
-				if(surroundings > smoothFactor){
-					arr.get(row).set(col, charLand);
+				if(surroundings > smoothFactor) 
+				{
+					grid[row][col] = Tile.GRASS;
+				} else if (surroundings < smoothFactor) {
+					grid[row][col] = Tile.WATER;
 				}
-				else if (surroundings < smoothFactor){
-					arr.get(row).set(col, charWater);
-				}
-
-
 			}
 		}
 	}
-
-	
-
 }
